@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react"
 
 function App() {
   const [selfPos, setSelfPos] = useState({ x: 0, y: 0 })
+  const [ballPos, setBallPos] = useState({ x: 0, y: 0 })
   const containerRef = useRef<any>(null)
   const selfBoardRef = useRef<any>(null)
   const isMouseDown = useRef<any>(false)
@@ -10,14 +11,19 @@ function App() {
   useEffect(() => {
     document.addEventListener('mousemove', handleMouseMove)
     containerRef.current.addEventListener('mousedown', handleMouseDown)
-    containerRef.current.addEventListener('mouseup', handleMouseUp)
+    document.addEventListener('mouseup', handleMouseUp)
+    calculateInitialBallPos()
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
       containerRef.current.removeEventListener('mousedown', handleMouseDown)
-      containerRef.current.removeEventListener('mouseup', handleMouseUp)
+      document.removeEventListener('mouseup', handleMouseUp)
     }
   }, [containerRef.current])
 
+  function calculateInitialBallPos() {
+    const containerBounds = containerRef.current?.getBoundingClientRect()
+    setBallPos({ x: (containerBounds.width) / 2, y: (containerBounds.height) / 2 })
+  }
   function handleMouseMove(e: MouseEvent) {
     e.preventDefault();
     if (!isMouseDown.current) return
@@ -54,8 +60,8 @@ function App() {
             transform: 'translateY(-50%)',
             translate: `0px ${selfPos.y}px`
           }}
-
           />
+          <div className="absolute rounded-full w-3 h-3 bg-black" style={{ top: `${ballPos.y}px`, left: `${ballPos.x}px`, transform: 'translate(-50%,-50%)', }} />
           <div id="opp_player" className="absolute h-1/6 w-2 bg-red-500 right-0" style={{
             top: '50%',
             transform: 'translateY(-50%)'
