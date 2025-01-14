@@ -5,7 +5,12 @@ function App() {
   const [selfPos, setSelfPos] = useState({ x: 0, y: 0 })
   const [ballPos, setBallPos] = useState({ x: 0, y: 0 })
   const containerRef = useRef<any>(null)
+  const ballDirection = useRef<any>('R')
+  const ballSpeed = useRef<any>(2)
+  const angleRef = useRef<any>(0)
   const selfBoardRef = useRef<any>(null)
+  const oppBoardRef = useRef<any>(null)
+  const ballRef = useRef<any>(null)
   const isMouseDown = useRef<any>(false)
 
   useEffect(() => {
@@ -13,12 +18,85 @@ function App() {
     containerRef.current.addEventListener('mousedown', handleMouseDown)
     document.addEventListener('mouseup', handleMouseUp)
     calculateInitialBallPos()
+    setTimeout(() => {
+      requestAnimationFrame(startBallMovement)
+      requestAnimationFrame(impactAnalyzer)
+    }, 1000);
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
       containerRef.current.removeEventListener('mousedown', handleMouseDown)
       document.removeEventListener('mouseup', handleMouseUp)
     }
   }, [containerRef.current])
+
+  function impactAnalyzer() {
+    const ballBounds = ballRef.current.getBoundingClientRect()
+    const selfBounds = selfBoardRef.current.getBoundingClientRect()
+    const oppBounds = oppBoardRef.current.getBoundingClientRect()
+    const isSelfImpact = checkImpact(ballBounds, selfBounds)
+    const isOppImpact = checkImpact(ballBounds, oppBounds)
+    if (isSelfImpact) {
+      checkBoardImpactPosition(ballBounds, selfBounds)
+      ballDirection.current = 'R'
+    }
+    if (isOppImpact) {
+      checkBoardImpactPosition(ballBounds, oppBounds)
+      ballDirection.current = 'L'
+    }
+    requestAnimationFrame(impactAnalyzer)
+
+  }
+
+  function checkBoardImpactPosition(ref1Bound: any, ref2Bound: any) {
+    const halfBoardHeight = ref2Bound?.height / 2
+    const halfBoardWidth = ref2Bound?.width / 2
+    const boardCenterY = ref2Bound?.top + halfBoardHeight
+    const boardCenterX = ref2Bound?.left + halfBoardWidth
+
+    const collisionY = ref1Bound?.top + ballRef?.current?.clientHeight
+    const collisionX = ref1Bound?.left + ballRef?.current?.clientWidth
+
+    const angle = Math.atan2(collisionY - boardCenterY, collisionX - boardCenterX);
+    angleRef.current = (angle * 180) / Math.PI
+
+    return (
+      ref1Bound.right > ref2Bound.left &&
+      ref1Bound.left < ref2Bound.right &&
+      ref1Bound.bottom > ref2Bound.top &&
+      ref1Bound.top < ref2Bound.bottom
+    );
+  }
+  function checkImpact(ref1Bound: any, ref2Bound: any) {
+    return (
+      ref1Bound.right > ref2Bound.left &&
+      ref1Bound.left < ref2Bound.right &&
+      ref1Bound.bottom > ref2Bound.top &&
+      ref1Bound.top < ref2Bound.bottom
+    );
+  }
+  function startBallMovement() {
+    const step = ballSpeed.current
+    const angle = angleRef.current
+    let yStep
+    if (angle > 0) {
+      yStep = step * Math.tan(Math.abs(angle))
+    } else {
+      yStep = -step * Math.tan(Math.abs(angle))
+    }
+
+    switch (ballDirection.current) {
+      case 'L':
+        setBallPos(prev => ({ y: prev.y + yStep, x: prev.x - step }))
+        break;
+      case 'R':
+        setBallPos(prev => ({ y: prev.y + yStep, x: prev.x + step }))
+        break;
+
+      default:
+        break;
+    }
+    requestAnimationFrame(startBallMovement)
+  }
 
   function calculateInitialBallPos() {
     const containerBounds = containerRef.current?.getBoundingClientRect()
@@ -49,6 +127,7 @@ function App() {
   function handleMouseUp() {
     isMouseDown.current = false
   }
+
   return (
     <div className="h-screen w-screen flex items-center justify-center">
       <div className="w-5/6 h-full flex items-center justify-center flex-col gap-4">
@@ -61,8 +140,8 @@ function App() {
             translate: `0px ${selfPos.y}px`
           }}
           />
-          <div className="absolute rounded-full w-3 h-3 bg-black" style={{ top: `${ballPos.y}px`, left: `${ballPos.x}px`, transform: 'translate(-50%,-50%)', }} />
-          <div id="opp_player" className="absolute h-1/6 w-2 bg-red-500 right-0" style={{
+          <div ref={ballRef} className="absolute rounded-full w-3 h-3 bg-black" style={{ top: `${ballPos.y}px`, left: `${ballPos.x}px`, transform: 'translate(-50%,-50%)', }} />
+          <div id="opp_player" ref={oppBoardRef} className="absolute h-1/6 w-2 bg-red-500 right-0" style={{
             top: '50%',
             transform: 'translateY(-50%)'
           }} />
