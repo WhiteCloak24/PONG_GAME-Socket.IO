@@ -5,11 +5,19 @@ function App() {
   const [selfPos, setSelfPos] = useState({ x: 0, y: 0 })
   const [ballPos, setBallPos] = useState({ x: 0, y: 0 })
   const containerRef = useRef<any>(null)
+
+  const leftBoundRef = useRef<any>(null)
+  const rightBoundRef = useRef<any>(null)
+  const bottomBoundRef = useRef<any>(null)
+  const topBoundRef = useRef<any>(null)
+
   const ballDirection = useRef<any>('R')
   const ballSpeed = useRef<any>(2)
-  const angleRef = useRef<any>(0)
+  const yMovement = useRef<any>(1)
+
   const selfBoardRef = useRef<any>(null)
   const oppBoardRef = useRef<any>(null)
+
   const ballRef = useRef<any>(null)
   const isMouseDown = useRef<any>(false)
 
@@ -30,42 +38,103 @@ function App() {
   }, [containerRef.current])
 
   function impactAnalyzer() {
-    const ballBounds = ballRef.current.getBoundingClientRect()
-    const selfBounds = selfBoardRef.current.getBoundingClientRect()
-    const oppBounds = oppBoardRef.current.getBoundingClientRect()
-    const isSelfImpact = checkImpact(ballBounds, selfBounds)
-    const isOppImpact = checkImpact(ballBounds, oppBounds)
-    if (isSelfImpact) {
-      checkBoardImpactPosition(ballBounds, selfBounds)
-      ballDirection.current = 'R'
-    }
-    if (isOppImpact) {
-      checkBoardImpactPosition(ballBounds, oppBounds)
-      ballDirection.current = 'L'
-    }
+    checkBoundCollision()
+    checkBoardsCollision()
+    // const selfBounds = selfBoardRef.current.getBoundingClientRect()
+    // const oppBounds = oppBoardRef.current.getBoundingClientRect()
+
+    // const isSelfImpact = checkImpact(ballBounds, selfBounds)
+    // const isOppImpact = checkImpact(ballBounds, oppBounds)
+
+    // if (isSelfImpact) {
+    //   checkBoardImpactPosition(ballBounds, selfBounds)
+    //   ballDirection.current = 'R'
+    // }
+    // if (isOppImpact) {
+    //   checkBoardImpactPosition(ballBounds, oppBounds)
+    //   ballDirection.current = 'L'
+    // }
     requestAnimationFrame(impactAnalyzer)
 
   }
 
-  function checkBoardImpactPosition(ref1Bound: any, ref2Bound: any) {
-    const halfBoardHeight = ref2Bound?.height / 2
-    const halfBoardWidth = ref2Bound?.width / 2
-    const boardCenterY = ref2Bound?.top + halfBoardHeight
-    const boardCenterX = ref2Bound?.left + halfBoardWidth
+  function checkBoardsCollision() {
+    const ballRect = ballRef.current.getBoundingClientRect();
 
-    const collisionY = ref1Bound?.top + ballRef?.current?.clientHeight
-    const collisionX = ref1Bound?.left + ballRef?.current?.clientWidth
-
-    const angle = Math.atan2(collisionY - boardCenterY, collisionX - boardCenterX);
-    angleRef.current = (angle * 180) / Math.PI
-
-    return (
-      ref1Bound.right > ref2Bound.left &&
-      ref1Bound.left < ref2Bound.right &&
-      ref1Bound.bottom > ref2Bound.top &&
-      ref1Bound.top < ref2Bound.bottom
-    );
+    const selfBoundsRect = selfBoardRef.current.getBoundingClientRect()
+    const oppBoundsRect = oppBoardRef.current.getBoundingClientRect()
+    const isSelfImpact = checkImpact(ballRect, selfBoundsRect)
+    const isOppImpact = checkImpact(ballRect, oppBoundsRect)
+    if (isSelfImpact) {
+      ballDirection.current = 'R'
+      const val = Math.random() * 2 - 1;
+      calculateYMovement(val)
+    }
+    if (isOppImpact) {
+      ballDirection.current = 'L'
+      const val = Math.random() * 2 - 1;
+      calculateYMovement(val)
+    }
+    // if (ballRect.left < selfBoundsRect.right) {
+    //   ballDirection.current = 'R'
+    //   const val = Math.random() * 2 - 1;
+    //   calculateYMovement(val)
+    // }
+    // if (ballRect.right > oppBoundsRect.left) {
+    //   ballDirection.current = 'L'
+    //   const val = Math.random() * 2 - 1;
+    //   calculateYMovement(val)
+    // }
   }
+  function checkBoundCollision() {
+    const ballRect = ballRef.current.getBoundingClientRect();
+
+    const topBoundaryRect = topBoundRef.current.getBoundingClientRect();
+    // const leftBoundaryRect = leftBoundRef.current.getBoundingClientRect();
+    // const rightBoundaryRect = rightBoundRef.current.getBoundingClientRect();
+    const bottomBoundaryRect = bottomBoundRef.current.getBoundingClientRect();
+
+    // if (ballRect.left < leftBoundaryRect.right) {
+    //   ballDirection.current = 'R'
+    // }
+    // if (ballRect.right > rightBoundaryRect.left) {
+    //   ballDirection.current = 'L'
+    // }
+    if (ballRect.bottom >= bottomBoundaryRect.top) {
+      calculateYMovement()
+    }
+    if (ballRect.top <= topBoundaryRect.bottom) {
+      calculateYMovement()
+    }
+  }
+  function calculateYMovement(val?: number) {
+    if (val) {
+      yMovement.current = val
+    } else {
+      yMovement.current = -(yMovement.current)
+    }
+
+  }
+  // function checkBoardImpactPosition(ref1Bound: any, ref2Bound: any) {
+  //   const halfBoardHeight = ref2Bound?.height / 2
+  //   const halfBoardWidth = ref2Bound?.width / 2
+  //   const boardCenterY = ref2Bound?.top + halfBoardHeight
+  //   const boardCenterX = ref2Bound?.left + halfBoardWidth
+
+  //   const collisionY = ref1Bound?.top + ballRef?.current?.clientHeight
+  //   const collisionX = ref1Bound?.left + ballRef?.current?.clientWidth
+  //   angleCalculation()
+  //   const angle = Math.atan2(collisionY - boardCenterY, collisionX - boardCenterX);
+  //   angleRef.current = (angle * 180) / Math.PI
+  //   // angleRef.current = 1
+
+  //   return (
+  //     ref1Bound.right > ref2Bound.left &&
+  //     ref1Bound.left < ref2Bound.right &&
+  //     ref1Bound.bottom > ref2Bound.top &&
+  //     ref1Bound.top < ref2Bound.bottom
+  //   );
+  // }
   function checkImpact(ref1Bound: any, ref2Bound: any) {
     return (
       ref1Bound.right > ref2Bound.left &&
@@ -76,20 +145,13 @@ function App() {
   }
   function startBallMovement() {
     const step = ballSpeed.current
-    const angle = angleRef.current
-    let yStep
-    if (angle > 0) {
-      yStep = step * Math.tan(Math.abs(angle))
-    } else {
-      yStep = -step * Math.tan(Math.abs(angle))
-    }
 
     switch (ballDirection.current) {
       case 'L':
-        setBallPos(prev => ({ y: prev.y + yStep, x: prev.x - step }))
+        setBallPos(prev => ({ y: prev.y + yMovement.current, x: prev.x - step }))
         break;
       case 'R':
-        setBallPos(prev => ({ y: prev.y + yStep, x: prev.x + step }))
+        setBallPos(prev => ({ y: prev.y + yMovement.current, x: prev.x + step }))
         break;
 
       default:
@@ -133,7 +195,10 @@ function App() {
       <div className="w-5/6 h-full flex items-center justify-center flex-col gap-4">
         <div className="flex items-center h-20">Room Code : 1234</div>
         <div ref={containerRef} className="rounded-md border-4 h-5/6 w-full relative cursor-pointer">
-          {/* <div className="absolute h-full w-2 bg-black left-1/2" /> */}
+          {/* <div ref={leftBoundRef} className="absolute h-full w-2 bg-black left-0"></div> */}
+          <div ref={rightBoundRef} className="absolute h-full w-2 right-0"></div>
+          <div ref={topBoundRef} className="absolute h-2 w-full bg-black top-0"></div>
+          <div ref={bottomBoundRef} className="absolute h-2 w-full bg-black bottom-0"></div>
           <div id="self_player" ref={selfBoardRef} className="absolute h-1/6 w-2 bg-blue-500 left-0" style={{
             top: '50%',
             transform: 'translateY(-50%)',
