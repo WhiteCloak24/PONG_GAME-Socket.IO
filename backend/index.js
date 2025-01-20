@@ -22,7 +22,7 @@ io.on('connection', (socket) => {
   console.log('A user connected');
   
   // Listen for a 'message' event from clients
-  socket.on('message', (data) => {
+  socket.on('update-pos', (data) => {
     console.log('Received message:', data);
   });
 

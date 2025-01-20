@@ -6,13 +6,15 @@ import { io, Socket } from 'socket.io-client';
 
 interface SipContextType {
   state: any;
+  updatePos: (data: any) => void;
 }
 export const SocketContext = createContext<SipContextType>({
   state: null,
+  updatePos: () => null,
 });
 
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState({})
+  const [state, setState] = useState<any>({ socket: null })
   useEffect(() => {
     makeConnection();
   }, []);
@@ -28,6 +30,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       transports: ["websocket"],
     });
     initializeListeners(socket);
+    setState((prev: any) => ({ ...prev, socket }))
   }, []);
 
   const initializeListeners = useCallback((socket: Socket) => {
@@ -40,7 +43,14 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  return <SocketContext.Provider value={{ state }}>{children}</SocketContext.Provider>;
+  function updatePos(data: any) {
+    if (state.socket) {
+      state.socket.emit('update-pos', {
+        data
+      })
+    }
+  }
+  return <SocketContext.Provider value={{ state, updatePos }}>{children}</SocketContext.Provider>;
 };
 
 export default SocketProvider;

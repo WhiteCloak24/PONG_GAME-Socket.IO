@@ -38,20 +38,6 @@ function App() {
   function impactAnalyzer() {
     checkBoundCollision()
     checkBoardsCollision()
-    // const selfBounds = selfBoardRef.current.getBoundingClientRect()
-    // const oppBounds = oppBoardRef.current.getBoundingClientRect()
-
-    // const isSelfImpact = checkImpact(ballBounds, selfBounds)
-    // const isOppImpact = checkImpact(ballBounds, oppBounds)
-
-    // if (isSelfImpact) {
-    //   checkBoardImpactPosition(ballBounds, selfBounds)
-    //   ballDirection.current = 'R'
-    // }
-    // if (isOppImpact) {
-    //   checkBoardImpactPosition(ballBounds, oppBounds)
-    //   ballDirection.current = 'L'
-    // }
     requestAnimationFrame(impactAnalyzer)
 
   }
@@ -113,26 +99,7 @@ function App() {
     }
 
   }
-  // function checkBoardImpactPosition(ref1Bound: any, ref2Bound: any) {
-  //   const halfBoardHeight = ref2Bound?.height / 2
-  //   const halfBoardWidth = ref2Bound?.width / 2
-  //   const boardCenterY = ref2Bound?.top + halfBoardHeight
-  //   const boardCenterX = ref2Bound?.left + halfBoardWidth
 
-  //   const collisionY = ref1Bound?.top + ballRef?.current?.clientHeight
-  //   const collisionX = ref1Bound?.left + ballRef?.current?.clientWidth
-  //   angleCalculation()
-  //   const angle = Math.atan2(collisionY - boardCenterY, collisionX - boardCenterX);
-  //   angleRef.current = (angle * 180) / Math.PI
-  //   // angleRef.current = 1
-
-  //   return (
-  //     ref1Bound.right > ref2Bound.left &&
-  //     ref1Bound.left < ref2Bound.right &&
-  //     ref1Bound.bottom > ref2Bound.top &&
-  //     ref1Bound.top < ref2Bound.bottom
-  //   );
-  // }
   function checkImpact(ref1Bound: any, ref2Bound: any) {
     return (
       ref1Bound.right > ref2Bound.left &&
