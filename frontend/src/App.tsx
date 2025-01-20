@@ -6,14 +6,12 @@ function App() {
   const [ballPos, setBallPos] = useState({ x: 0, y: 0 })
   const containerRef = useRef<any>(null)
 
-  const leftBoundRef = useRef<any>(null)
-  const rightBoundRef = useRef<any>(null)
   const bottomBoundRef = useRef<any>(null)
   const topBoundRef = useRef<any>(null)
 
   const ballDirection = useRef<any>('R')
   const ballSpeed = useRef<any>(2)
-  const yMovement = useRef<any>(1)
+  const yMovement = useRef<any>(0)
 
   const selfBoardRef = useRef<any>(null)
   const oppBoardRef = useRef<any>(null)
@@ -196,7 +194,7 @@ function App() {
         <div className="flex items-center h-20">Room Code : 1234</div>
         <div ref={containerRef} className="rounded-md border-4 h-5/6 w-full relative cursor-pointer">
           {/* <div ref={leftBoundRef} className="absolute h-full w-2 bg-black left-0"></div> */}
-          <div ref={rightBoundRef} className="absolute h-full w-2 right-0"></div>
+          {/* <div ref={rightBoundRef} className="absolute h-full w-2 right-0"></div> */}
           <div ref={topBoundRef} className="absolute h-2 w-full bg-black top-0"></div>
           <div ref={bottomBoundRef} className="absolute h-2 w-full bg-black bottom-0"></div>
           <div id="self_player" ref={selfBoardRef} className="absolute h-1/6 w-2 bg-blue-500 left-0" style={{
