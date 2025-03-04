@@ -8,6 +8,7 @@ interface BaseModalProps {
   header?: ReactNode;
 }
 
+
 const JoinRoomModal: FC<BaseModalProps> = () => {
   const modalTitle = "Join Room";
   const { joinRoom } = useSocket();

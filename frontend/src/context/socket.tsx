@@ -18,23 +18,32 @@ interface SipContextType {
   opponentsPos: any;
   rooms: string[];
   joinRoom: (roomCode: string) => void;
+  _sendMessageToRoom?: (message: string) => void;
+  notifications?: string[];
+  messages?: Message[];
 }
 export const SocketContext = createContext<SipContextType>({
   state: null,
   updatePos: () => null,
   opponentsPos: null,
   rooms: [],
-  joinRoom: (roomCode: string) => null,
+  joinRoom: () => null,
 });
+
+interface Message {
+  message: string;
+  user: string;
+}
 
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<any>({ socket: null });
   const [opponentsPos, setOpponentsPos] = useState(null);
   const [rooms, setRooms] = useState<string[]>([]);
+  const [notifications, setNotifications] = useState<string[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   useEffect(() => {
     makeConnection();
   }, []);
-  console.log({ rooms });
 
   const getRoomInfo = (socket: Socket) => {
     socket.emit("get-room-info", null, (data: string[] | undefined) => {
@@ -43,6 +52,23 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         setRooms(data);
       }
     });
+  };
+
+  const _getUserInfo = (socket: Socket) => {
+    socket.emit("get-user-info", null, (user: any) => {
+      console.log({ user });
+    });
+  };
+
+  const getUserInfo = (socket: Socket) => {
+    _getUserInfo(socket);
+  };
+
+  const _sendMessageToRoom = (message: string) => {
+    if (state?.socket) {
+      state?.socket?.emit("send-message", message);
+      return;
+    }
   };
 
   interface SocketResponse {
@@ -78,7 +104,19 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
             console.log("joined-room", data);
             getRoomInfo(socket);
           });
+          socket.on("new-message", (newMessage) => {
+            console.log({ newMessage });
+          });
+          socket.on("messages", (messages) => {
+            console.log({ messages });
+            setMessages(messages);
+          });
+          socket.on("notifications", (notifications: string[]) => {
+            console.log({ notifications });
+            setNotifications([...notifications]);
+          });
           getRoomInfo(socket);
+          getUserInfo(socket);
           socket.on("disconnect", () => {});
         });
       }
@@ -101,7 +139,16 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   }
   return (
     <SocketContext.Provider
-      value={{ state, updatePos, opponentsPos, rooms, joinRoom }}
+      value={{
+        state,
+        updatePos,
+        opponentsPos,
+        rooms,
+        joinRoom,
+        _sendMessageToRoom,
+        notifications,
+        messages,
+      }}
     >
       {children}
     </SocketContext.Provider>
