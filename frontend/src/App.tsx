@@ -2,15 +2,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from "react";
 import { useSocket } from "./hooks/useSocket";
+import JoinRoomModal from "./components/join-room-modal";
 
 function App() {
   const [selfPos, setSelfPos] = useState({ x: 0, y: 0 });
   const [ballPos, setBallPos] = useState({ x: 0, y: 0 });
   const [stopBall, setStopBall] = useState(true);
 
-  const { opponentsPos = { x: 0, y: 0 }, updatePos } = useSocket();
+  const { opponentsPos = { x: 0, y: 0 }, updatePos, rooms } = useSocket();
 
-  console.log({ opponentsPos });
+  // console.log({ opponentsPos });
 
   const containerRef = useRef<any>(null);
   const bottomBoundRef = useRef<any>(null);
@@ -196,7 +197,9 @@ function App() {
   return (
     <div className="h-screen w-screen flex items-center justify-center">
       <div className="w-5/6 h-full flex items-center justify-center flex-col gap-4">
-        <div className="flex items-center h-20">Room Code : 1234</div>
+        <div className="flex items-center h-20">
+          Room Code : {rooms.length > 0 && rooms[0]}
+        </div>
         <div
           ref={containerRef}
           className="rounded-md border-4 h-5/6 w-full relative cursor-pointer"
@@ -247,6 +250,7 @@ function App() {
           />
         </div>
       </div>
+      {!rooms.length && <JoinRoomModal />}
     </div>
   );
 }
