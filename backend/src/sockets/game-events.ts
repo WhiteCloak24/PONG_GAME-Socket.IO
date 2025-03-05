@@ -16,16 +16,6 @@ const registerGameEvents = (io: Server, socket: Socket) => {
     firstName: randomName.first(),
     lastName: randomName.last(),
   };
-  socket.on("get-user-info", (_, cb) => {
-    cb(users[socket.id]);
-  });
-
-  socket.on("update-pos", (data) => {
-    const rooms = socket.rooms;
-    for (let room of rooms) {
-      socket.to(room).emit("get-pos", data);
-    }
-  });
 
   const getRooms = () => {
     return Array.from(socket.rooms).slice(1);
@@ -40,12 +30,28 @@ const registerGameEvents = (io: Server, socket: Socket) => {
     return roomInfo[roomCode];
   };
 
+  const getUserName = () => {
+    const user = users[socket.id];
+    return `${user.firstName} ${user.lastName}`;
+  };
+
   const sendNotifications = () => {
     io.to(getMyRoomCode()).emit(
       "notifications",
       getRoomInfo(getMyRoomCode())?.notifications
     );
   };
+
+  socket.on("get-user-info", (_, cb) => {
+    cb(users[socket.id]);
+  });
+
+  socket.on("update-pos", (data) => {
+    const rooms = socket.rooms;
+    for (let room of rooms) {
+      socket.to(room).emit("get-pos", data);
+    }
+  });
 
   socket.on("add-to-room", (roomCode: string, cb: CallableFunction) => {
     if (typeof roomCode === "string") {
@@ -66,10 +72,6 @@ const registerGameEvents = (io: Server, socket: Socket) => {
       cb({ success: false, message: "Room Code is not string!" });
     }
   });
-  const getUserName = () => {
-    const user = users[socket.id];
-    return `${user.firstName} ${user.lastName}`;
-  };
 
   socket.on("send-message", (message: string) => {
     const roomCode = getMyRoomCode();

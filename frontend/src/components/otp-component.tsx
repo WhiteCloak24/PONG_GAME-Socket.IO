@@ -1,4 +1,4 @@
-import { FC, useRef, useState } from "react";
+import React, { FC, useRef, useState } from "react";
 
 const otpLength = 4;
 
@@ -13,6 +13,15 @@ const OTPInput: FC<OTPInputProps> = ({
 }) => {
   const [input, setInput] = useState<string[]>([]);
   const inputNodesRef = useRef<Array<HTMLInputElement> | null>([]);
+
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      const otp = input.join("");
+      if (otp && otp?.length >= 4) {
+        submitFunction(otp);
+      }
+    }
+  };
 
   return (
     <div className="flex gap-2">
@@ -43,6 +52,12 @@ const OTPInput: FC<OTPInputProps> = ({
                 if (inputValue && !isNaN(inputValue)) {
                   setInput((prev) => {
                     prev[index] = String(inputValue);
+                    if (!(index + 1 < otpLength)) {
+                      const otp = input.join("");
+                      if (otp && otp?.length >= 4) {
+                        submitFunction(otp);
+                      }
+                    }
                     return prev.slice(0);
                   });
                   if (index + 1 < otpLength) {
@@ -51,6 +66,7 @@ const OTPInput: FC<OTPInputProps> = ({
                   }
                 }
               }}
+              onKeyDown={handleEnterKey}
             />
           </div>
         );
