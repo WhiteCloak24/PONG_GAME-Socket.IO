@@ -152,7 +152,6 @@ function App() {
           x: prev.x + step,
         }));
         break;
-
       default:
         break;
     }

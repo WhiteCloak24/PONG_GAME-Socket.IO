@@ -8,17 +8,23 @@ const ChatSidebar = () => {
     _sendMessageToRoom = () => null,
     notifications = [],
     messages = [],
+    rooms,
+    sendTypingEvent = () => null,
+    usersTyping = [],
   } = useSocket();
+
+  console.log({ usersTyping });
+
   return (
     <div className="h-full w-[230px]">
-      <div className="h-full border-2 bg-slate-200 w-full flex flex-col justify-between">
-        <div className="w-full justify-end">
-          <h1>govind</h1>
+      <div className="h-full border-2 bg-slate-200 w-full flex flex-col justify-between gap-2">
+        <div className="w-full flex justify-center items-center">
+          <h1>Room Chat {rooms.length > 0 && rooms[0]}</h1>
         </div>
-        <div className="w-full justify-end flex flex-col gap-1">
+        <div className="w-full flex flex-col gap-1 flex-grow">
           {notifications?.length > 0 &&
             notifications?.map((msg) => (
-              <p className="bg-slate-400 p-2">{msg || ""}</p>
+              <p className="bg-slate-400 p-2 text-sm">{msg || ""}</p>
             ))}
           {messages?.length > 0 &&
             messages?.map(({ user, message }) => (
@@ -27,9 +33,16 @@ const ChatSidebar = () => {
                 <p className="bg-slate-400 p-2">{message || ""}</p>
               </>
             ))}
+          {usersTyping?.length > 0 &&
+            usersTyping?.map((user) => <p>{user} is typing...</p>)}
         </div>
         <div className="w-full p-2 flex">
-          <input value={message} onChange={(e) => setMessage(e.target.value)} />
+          <input
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onFocus={() => sendTypingEvent(true)}
+            onBlur={() => sendTypingEvent(false)}
+          />
           <button
             className="bg-blue-300 cursor-pointer"
             onClick={() => {

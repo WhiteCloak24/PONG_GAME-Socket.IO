@@ -21,6 +21,8 @@ interface SipContextType {
   _sendMessageToRoom?: (message: string) => void;
   notifications?: string[];
   messages?: Message[];
+  sendTypingEvent?: (typing: boolean) => void;
+  usersTyping?: string[];
 }
 export const SocketContext = createContext<SipContextType>({
   state: null,
@@ -35,15 +37,25 @@ interface Message {
   user: string;
 }
 
+interface UserInfo {
+  firstName: string;
+  lastName: string;
+}
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<any>({ socket: null });
   const [opponentsPos, setOpponentsPos] = useState(null);
   const [rooms, setRooms] = useState<string[]>([]);
   const [notifications, setNotifications] = useState<string[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [usersTyping, setUsersTyping] = useState<string[]>([]);
+  const [userInfo, setUserInfo] = useState<UserInfo | undefined>();
   useEffect(() => {
     makeConnection();
   }, []);
+
+  const getUserName = () => {
+    return `${userInfo?.firstName} ${userInfo?.lastName}`;
+  };
 
   const getRoomInfo = (socket: Socket) => {
     socket.emit("get-room-info", null, (data: string[] | undefined) => {
@@ -54,8 +66,13 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const sendTypingEvent = (typing: boolean = true) => {
+    state?.socket?.emit("typing", typing);
+  };
+
   const _getUserInfo = (socket: Socket) => {
     socket.emit("get-user-info", null, (user: any) => {
+      setUserInfo(user);
       console.log({ user });
     });
   };
@@ -115,6 +132,10 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
             console.log({ notifications });
             setNotifications([...notifications]);
           });
+          socket.on("typing-list", (usersTyping: string[] = []) => {
+            const username = getUserName();
+            setUsersTyping(usersTyping?.filter((u) => u !== username));
+          });
           getRoomInfo(socket);
           getUserInfo(socket);
           socket.on("disconnect", () => {});
@@ -148,6 +169,8 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         _sendMessageToRoom,
         notifications,
         messages,
+        sendTypingEvent,
+        usersTyping,
       }}
     >
       {children}

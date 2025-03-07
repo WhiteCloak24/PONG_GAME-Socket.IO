@@ -10,6 +10,7 @@ const roomInfo: {
 
 const users: { [socket_id: string]: { firstName: string; lastName: string } } =
   {};
+let usersTyping = [];
 
 const registerGameEvents = (io: Server, socket: Socket) => {
   users[socket.id] = {
@@ -40,6 +41,10 @@ const registerGameEvents = (io: Server, socket: Socket) => {
       "notifications",
       getRoomInfo(getMyRoomCode())?.notifications
     );
+  };
+
+  const sendTypingUsers = () => {
+    socket.to(getMyRoomCode()).emit("typing-list", usersTyping);
   };
 
   socket.on("get-user-info", (_, cb) => {
@@ -86,8 +91,30 @@ const registerGameEvents = (io: Server, socket: Socket) => {
     }
   });
 
+  socket.on("typing", (data) => {
+    const username = getUserName();
+    if (data) usersTyping = [...usersTyping, username];
+    else usersTyping = usersTyping.filter((u) => u != username);
+    sendTypingUsers();
+  });
+
   socket.on("get-room-info", (data, cb) => {
     if (cb) cb(getRooms());
+  });
+
+  socket.on("disconnecting", () => {
+    const username = getUserName();
+    delete users[socket.id];
+
+    const myRoom = getRoomInfo(getMyRoomCode());
+    myRoom?.notifications?.push(`${username} left room`);
+    sendNotifications();
+
+    usersTyping = usersTyping.filter((u) => u != username);
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`Client disconnected: ${socket.id}`);
   });
 };
 
