@@ -70,7 +70,7 @@ const registerGameEvents = (io: Server, socket: Socket) => {
           };
         }
         const myRoom = getRoomInfo(getMyRoomCode());
-        myRoom?.notifications?.push(`${getUserName()} joined room ${roomCode}`);
+        myRoom?.notifications?.push(`${getUserName()} joined room`);
         sendNotifications();
       }, 1000);
     } else {

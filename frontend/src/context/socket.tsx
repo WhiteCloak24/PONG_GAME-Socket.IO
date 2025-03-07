@@ -14,6 +14,7 @@ import { io, Socket } from "socket.io-client";
 
 interface SipContextType {
   state: any;
+  socketConnected: boolean;
   updatePos: (data: any) => void;
   opponentsPos: any;
   rooms: string[];
@@ -26,6 +27,7 @@ interface SipContextType {
 }
 export const SocketContext = createContext<SipContextType>({
   state: null,
+  socketConnected: false,
   updatePos: () => null,
   opponentsPos: null,
   rooms: [],
@@ -49,6 +51,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [usersTyping, setUsersTyping] = useState<string[]>([]);
   const [userInfo, setUserInfo] = useState<UserInfo | undefined>();
+  const [socketConnected, setSocketConnected] = useState<boolean>(false);
   useEffect(() => {
     makeConnection();
   }, []);
@@ -114,6 +117,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         socket.on("connect", () => {
           console.log("socket connected");
           setState({ socket });
+          setSocketConnected(true);
           socket.on("get-pos", (data) => {
             setOpponentsPos(data);
           });
@@ -140,6 +144,11 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
           getUserInfo(socket);
           socket.on("disconnect", () => {});
         });
+
+        socket.on("disconnect", (reason) => {
+          console.log("Disconnected from client", reason);
+          setSocketConnected(false);
+        });
       }
     },
     [setState]
@@ -162,6 +171,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     <SocketContext.Provider
       value={{
         state,
+        socketConnected,
         updatePos,
         opponentsPos,
         rooms,

@@ -11,6 +11,7 @@ const ChatSidebar = () => {
     rooms,
     sendTypingEvent = () => null,
     usersTyping = [],
+    socketConnected = false,
   } = useSocket();
 
   console.log({ usersTyping });
@@ -19,7 +20,14 @@ const ChatSidebar = () => {
     <div className="h-full w-[230px]">
       <div className="h-full border-2 bg-slate-200 w-full flex flex-col justify-between gap-2">
         <div className="w-full flex justify-center items-center">
-          <h1>Room Chat {rooms.length > 0 && rooms[0]}</h1>
+          <span className="text-xl">
+            Room Chat {rooms.length > 0 && rooms[0]}{" "}
+          </span>{" "}
+          <span
+            className={`p-2 rounded-full ${
+              socketConnected ? "bg-green-400" : "bg-orange-400"
+            }`}
+          ></span>
         </div>
         <div className="w-full flex flex-col gap-1 flex-grow">
           {notifications?.length > 0 &&
