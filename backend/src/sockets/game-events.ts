@@ -33,7 +33,7 @@ const registerGameEvents = (io: Server, socket: Socket) => {
 
   const getUserName = () => {
     const user = users[socket.id];
-    return `${user.firstName} ${user.lastName}`;
+    return user ? `${user?.firstName} ${user?.lastName}` : "";
   };
 
   const sendNotifications = () => {
@@ -102,12 +102,23 @@ const registerGameEvents = (io: Server, socket: Socket) => {
     if (cb) cb(getRooms());
   });
 
+  socket.on("leave-room", async (room: string = getMyRoomCode()) => {
+    const username = getUserName();
+    delete users[socket.id];
+
+    const myRoom = getRoomInfo(getMyRoomCode());
+    myRoom?.notifications?.push(`${username} left room!`);
+
+    sendNotifications();
+    socket.leave(room);
+  });
+
   socket.on("disconnecting", () => {
     const username = getUserName();
     delete users[socket.id];
 
     const myRoom = getRoomInfo(getMyRoomCode());
-    myRoom?.notifications?.push(`${username} left room`);
+    myRoom?.notifications?.push(`${username} disconnected!`);
     sendNotifications();
 
     usersTyping = usersTyping.filter((u) => u != username);

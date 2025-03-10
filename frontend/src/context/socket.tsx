@@ -24,6 +24,7 @@ interface SipContextType {
   messages?: Message[];
   sendTypingEvent?: (typing: boolean) => void;
   usersTyping?: string[];
+  exitRoom: () => void;
 }
 export const SocketContext = createContext<SipContextType>({
   state: null,
@@ -32,6 +33,7 @@ export const SocketContext = createContext<SipContextType>({
   opponentsPos: null,
   rooms: [],
   joinRoom: () => null,
+  exitRoom: () => null,
 });
 
 interface Message {
@@ -111,6 +113,14 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     _joinRoom(roomCode, state.socket);
   };
 
+  const _exitRoom = (roomCode?: string) => {
+    state?.socket?.emit("leave-room");
+  };
+
+  const exitRoom = () => {
+    _exitRoom();
+  };
+
   const initializeListeners = useCallback(
     (socket: Socket) => {
       if (socket) {
@@ -181,6 +191,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         messages,
         sendTypingEvent,
         usersTyping,
+        exitRoom,
       }}
     >
       {children}
