@@ -11,6 +11,7 @@ import {
 } from "react";
 import toast from "react-hot-toast";
 import { io, Socket } from "socket.io-client";
+import { getUserId, setUserId } from "../utils/functions";
 
 interface SipContextType {
   state: any;
@@ -24,7 +25,9 @@ interface SipContextType {
   messages?: Message[];
   sendTypingEvent?: (typing: boolean) => void;
   usersTyping?: string[];
-  exitRoom: () => void;
+  exitRoom: (roomCode: string) => void;
+  joiningRoom: boolean;
+  leavingRoom: boolean;
 }
 export const SocketContext = createContext<SipContextType>({
   state: null,
@@ -34,6 +37,8 @@ export const SocketContext = createContext<SipContextType>({
   rooms: [],
   joinRoom: () => null,
   exitRoom: () => null,
+  joiningRoom: false,
+  leavingRoom: false,
 });
 
 interface Message {
@@ -54,6 +59,8 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [usersTyping, setUsersTyping] = useState<string[]>([]);
   const [userInfo, setUserInfo] = useState<UserInfo | undefined>();
   const [socketConnected, setSocketConnected] = useState<boolean>(false);
+  const [joiningRoom, setJoiningRoom] = useState(false);
+  const [leavingRoom, setLeavingRoom] = useState(false);
   useEffect(() => {
     makeConnection();
   }, []);
@@ -99,13 +106,22 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     data: any;
   }
 
+  interface User {
+    firstName: string;
+    lastName: string;
+    id: string;
+  }
+
   const _joinRoom = (roomCode: string, socket: Socket) => {
+    setJoiningRoom(true);
     socket.emit("add-to-room", roomCode, (response: SocketResponse) => {
       if (response.success) {
         toast.success(response.message);
       } else {
         toast.error(response.message);
       }
+      console.log("abc");
+      setJoiningRoom(false);
     });
   };
 
@@ -114,11 +130,19 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const _exitRoom = (roomCode?: string) => {
-    state?.socket?.emit("leave-room");
+    setLeavingRoom(true);
+    state?.socket?.emit("leave-room", roomCode, (data: string[]) => {
+      if (Array.isArray(data)) {
+        setRooms(data);
+      }
+      setLeavingRoom(false);
+    });
   };
 
-  const exitRoom = () => {
-    _exitRoom();
+  const exitRoom = (roomCode: string) => {
+    if (roomCode && typeof roomCode === "string") {
+      _exitRoom(roomCode);
+    }
   };
 
   const initializeListeners = useCallback(
@@ -128,6 +152,19 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
           console.log("socket connected");
           setState({ socket });
           setSocketConnected(true);
+
+          setTimeout(() => {
+            
+            socket.emit("set-user", getUserId(), (response: SocketResponse) => {
+              if (response?.success) {
+                const user = response?.data?.user as User;
+                setUserId(user?.id);
+                getRoomInfo(socket);
+                getUserInfo(socket);
+              }
+            });
+          }, 1000);
+
           socket.on("get-pos", (data) => {
             setOpponentsPos(data);
           });
@@ -150,8 +187,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
             const username = getUserName();
             setUsersTyping(usersTyping?.filter((u) => u !== username));
           });
-          getRoomInfo(socket);
-          getUserInfo(socket);
+
           socket.on("disconnect", () => {});
         });
 
@@ -192,6 +228,8 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         sendTypingEvent,
         usersTyping,
         exitRoom,
+        joiningRoom,
+        leavingRoom,
       }}
     >
       {children}

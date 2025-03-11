@@ -8,16 +8,24 @@ const roomInfo: {
   };
 } = {};
 
-const users: { [socket_id: string]: { firstName: string; lastName: string } } =
-  {};
+interface SocketResponse {
+  success: boolean;
+  message: string;
+  data: any;
+}
+
+interface User {
+  firstName: string;
+  lastName: string;
+  id: string;
+}
+
+const users: {
+  [userId: string]: User;
+} = {};
 let usersTyping = [];
 
 const registerGameEvents = (io: Server, socket: Socket) => {
-  users[socket.id] = {
-    firstName: randomName.first(),
-    lastName: randomName.last(),
-  };
-
   const getRooms = () => {
     return Array.from(socket.rooms).slice(1);
   };
@@ -47,6 +55,42 @@ const registerGameEvents = (io: Server, socket: Socket) => {
     socket.to(getMyRoomCode()).emit("typing-list", usersTyping);
   };
 
+  const createUser = () => {
+    return {
+      firstName: randomName.first(),
+      lastName: randomName.last(),
+    };
+  };
+
+  socket.on(
+    "set-user",
+    (userId: string, cb: (user: SocketResponse) => void = () => null) => {
+      console.log(userId, users);
+      if (userId) {
+        if (users[userId]) {
+        } else {
+          users[userId] = { ...createUser(), id: userId };
+        }
+        cb({
+          success: true,
+          message: "",
+          data: {
+            user: users[userId],
+          },
+        });
+      } else {
+        users[socket.id] = { ...createUser(), id: socket.id };
+        cb({
+          success: true,
+          message: "",
+          data: {
+            user: users[socket.id],
+          },
+        });
+      }
+    }
+  );
+
   socket.on("get-user-info", (_, cb) => {
     cb(users[socket.id]);
   });
@@ -71,6 +115,7 @@ const registerGameEvents = (io: Server, socket: Socket) => {
         }
         const myRoom = getRoomInfo(getMyRoomCode());
         myRoom?.notifications?.push(`${getUserName()} joined room`);
+        cb({ success: false, message: `${getUserName()} joined room` });
         sendNotifications();
       }, 1000);
     } else {
@@ -102,15 +147,16 @@ const registerGameEvents = (io: Server, socket: Socket) => {
     if (cb) cb(getRooms());
   });
 
-  socket.on("leave-room", async (room: string = getMyRoomCode()) => {
+  socket.on("leave-room", async (room: string = getMyRoomCode(), cb) => {
     const username = getUserName();
     delete users[socket.id];
 
-    const myRoom = getRoomInfo(getMyRoomCode());
+    const myRoom = getRoomInfo(room);
     myRoom?.notifications?.push(`${username} left room!`);
 
     sendNotifications();
-    socket.leave(room);
+    await socket.leave(room);
+    cb(getRooms());
   });
 
   socket.on("disconnecting", () => {

@@ -10,7 +10,7 @@ interface BaseModalProps {
 
 const JoinRoomModal: FC<BaseModalProps> = () => {
   const modalTitle = "Join Room";
-  const { joinRoom } = useSocket();
+  const { joinRoom, joiningRoom } = useSocket();
   return (
     <div className="fixed h-screen w-screen bg-black bg-opacity-45">
       <div className="absolute top-0 left-0 flex items-center justify-center h-full w-full">
@@ -19,7 +19,11 @@ const JoinRoomModal: FC<BaseModalProps> = () => {
             <h3 className="font-bold text-gray-800">{modalTitle}</h3>
           </div>
           <div className="flex justify-end items-center gap-x-2 py-3 px-4 border-t">
-            <OTPInput submitFunction={joinRoom} submitText="Join" />
+            <OTPInput
+              submitFunction={joinRoom}
+              submitText="Join"
+              submitting={joiningRoom}
+            />
           </div>
         </div>
       </div>

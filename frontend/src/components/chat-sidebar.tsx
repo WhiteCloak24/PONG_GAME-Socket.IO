@@ -18,8 +18,11 @@ const ChatSidebar = () => {
   console.log({ usersTyping });
 
   const handleExit = () => {
-    exitRoom();
+    rooms.length > 0 ? exitRoom(rooms[0]) : null;
   };
+
+  console.log(rooms);
+
   return (
     <div className="h-full w-[230px]">
       <div className="h-full border-2 bg-slate-200 w-full flex flex-col justify-between gap-2">

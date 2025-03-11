@@ -5,11 +5,13 @@ const otpLength = 4;
 interface OTPInputProps {
   submitText?: string;
   submitFunction?: (otp: string) => void;
+  submitting: boolean;
 }
 
 const OTPInput: FC<OTPInputProps> = ({
   submitFunction = () => null,
   submitText = "Submit",
+  submitting = false,
 }) => {
   const [input, setInput] = useState<string[]>([]);
   const inputNodesRef = useRef<Array<HTMLInputElement> | null>([]);
@@ -31,6 +33,7 @@ const OTPInput: FC<OTPInputProps> = ({
             <input
               type="text"
               className="py-3 px-4 block w-16 rounded-lg text-sm border-gray-400 border-2 focus:border-blue-500 focus:ring-blue-500 outline-none"
+              disabled={submitting}
               ref={(el) => {
                 if (!Array.isArray(inputNodesRef.current))
                   inputNodesRef.current = [];
@@ -75,6 +78,7 @@ const OTPInput: FC<OTPInputProps> = ({
         type="button"
         className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
         onClick={() => submitFunction(input.join(""))}
+        disabled={submitting}
       >
         {submitText}
       </button>
